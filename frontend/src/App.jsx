@@ -13,12 +13,38 @@ import axios from "axios";
 function App() {
   const [businesses, setBusinesses] = useState([]);
   const [search, setSearch] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [page, setPage] = useState(1);
-const filteredBusinesses = businesses.filter((business) =>
-  JSON.stringify(business)
-    .toLowerCase()
-    .includes(search.toLowerCase())
+  const cities = [
+  ...new Set(
+    businesses.map((b) => {
+      const parts = b.Address?.split(",");
+      return parts?.[1]?.trim();
+    })
+  ),
+].filter(Boolean);
+const filteredBusinesses = businesses.filter((b) => {
+  const matchesSearch =
+    b.Name.toLowerCase().includes(search.toLowerCase());
+
+  const rating =
+    parseFloat(String(b.Rating).replace(" stars", "")) || 0;
+
+  const matchesRating =
+    ratingFilter ? rating >= Number(ratingFilter) : true;
+const city = b.Address?.split(",")[1]?.trim();
+
+const matchesLocation =
+  locationFilter
+    ? city === locationFilter
+    : true;
+  return (
+  matchesSearch &&
+  matchesRating &&
+  matchesLocation
 );
+});
 const recordsPerPage = 20;
 
 const start =
@@ -32,7 +58,7 @@ filteredBusinesses.slice(start, end);
   const ratingData = [
   {
     name: "4+ Rating",
-    count: businesses.filter((b) => {
+    count: filteredBusinesses.filter((b) => {
       const rating = parseFloat(
         String(b.Rating || "0").replace(" stars", "")
       );
@@ -41,7 +67,7 @@ filteredBusinesses.slice(start, end);
   },
   {
     name: "Below 4",
-    count: businesses.filter((b) => {
+    count: filteredBusinesses.filter((b) => {
       const rating = parseFloat(
         String(b.Rating || "0").replace(" stars", "")
       );
@@ -61,16 +87,23 @@ filteredBusinesses.slice(start, end);
       });
   }, []);
   const missingWebsite =
-  businesses.filter(
+   filteredBusinesses.filter(
     b => !b.Website || b.Website === "N/A"
   ).length;
+  const phoneCoverage =
+(
+  filteredBusinesses.filter(
+    (b) => b.Phone && b.Phone !== "N/A"
+  ).length /
+  filteredBusinesses.length
+) * 100;
   const missingPhone =
-  businesses.filter(
-    b => !b.Phone || b.Phone === "N/A"
+  filteredBusinesses.filter(
+    (b) => !b.Phone || b.Phone === "N/A"
   ).length;
   const topBusiness =
-  businesses.length > 0
-    ? businesses.reduce((a, b) =>
+   filteredBusinesses.length > 0
+    ? filteredBusinesses.reduce((a, b) =>
         parseFloat(String(a.Rating).replace(" stars", "")) >
         parseFloat(String(b.Rating).replace(" stars", ""))
           ? a
@@ -86,7 +119,7 @@ filteredBusinesses.slice(start, end);
 <input
 className="search-box"
   type="text"
-  placeholder="Search Business..."
+    placeholder="🔍 Search Business..."
   value={search}
   onChange={(e) => setSearch(e.target.value)}
   style={{
@@ -96,23 +129,55 @@ className="search-box"
   }}
   
 />
+<select
+  value={locationFilter}
+  onChange={(e) => setLocationFilter(e.target.value)}
+>
+  <option value="">📍 All Cities</option>
+
+  {cities.map((city) => (
+    <option key={city} value={city}>
+      {city}
+    </option>
+  ))}
+</select>
+<select
+  value={ratingFilter}
+  onChange={(e) => setRatingFilter(e.target.value)}
+  style={{
+    padding: "10px",
+    marginLeft: "10px",
+    borderRadius: "5px"
+  }}
+>
+  <option value="">⭐ All Ratings</option>
+  <option value="4">4+ Stars</option>
+  <option value="3">3+ Stars</option>
+</select>
 
       <div className="cards">
   <div className="card">
     <h3>📋 Total Records</h3>
-    <p>{businesses.length}</p>
+    <p>{filteredBusinesses.length}</p>
   </div>
-
+<div className="card">
+  <h3>📞 Missing Phone</h3>
+  <p>{missingPhone}</p>
+</div>
+<div className="card">
+  <h3>📱 Phone Coverage %</h3>
+  <p>{phoneCoverage.toFixed(1)}%</p>
+</div>
   <div className="card">
     <h3>⭐ Average Rating</h3>
     <p>
-      {businesses.length > 0
+      {filteredBusinesses.length > 0
         ? (
-            businesses.reduce(
+            filteredBusinesses.reduce(
               (sum, b) =>
                 sum + parseFloat(String(b.Rating).replace(" stars", "")),
               0
-            ) / businesses.length
+            ) /filteredBusinesses.length
           ).toFixed(2)
         : 0}
     </p>
@@ -121,7 +186,7 @@ className="search-box"
   <div className="card">
     <h3>🌐 With Website</h3>
     <p>
-      {businesses.filter(
+      {filteredBusinesses.filter(
         b => b.Website && b.Website !== "N/A"
       ).length}
     </p>
@@ -130,7 +195,7 @@ className="search-box"
   <div className="card">
     <h3>❌ Without Website</h3>
     <p>
-      {businesses.filter(
+      {filteredBusinesses.filter(
         b => !b.Website || b.Website === "N/A"
       ).length}
     </p>
@@ -139,10 +204,10 @@ className="search-box"
   <h3>📈 Website Coverage %</h3>
   <p>
     {(
-      (businesses.filter(
+      (filteredBusinesses.filter(
         (b) => b.Website && b.Website !== "N/A"
       ).length /
-        businesses.length) *
+        filteredBusinesses.length) *
       100
     ).toFixed(1)}
     %
