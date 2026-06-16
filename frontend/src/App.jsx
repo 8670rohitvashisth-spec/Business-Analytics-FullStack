@@ -76,16 +76,28 @@ filteredBusinesses.slice(start, end);
   },
 ];
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/businesses")
-      .then((res) => {
-        console.log(res.data);
-        setBusinesses(res.data);
-      })
-      .catch((err) => {
-        console.log("ERROR:", err);
-      });
-  }, []);
+  axios
+    .get("http://localhost:5000/token")
+    .then((tokenRes) => {
+      const token = tokenRes.data.token;
+
+      return axios.get(
+        "http://localhost:5000/api/businesses",
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+    })
+    .then((res) => {
+      console.log(res.data);
+      setBusinesses(res.data);
+    })
+    .catch((err) => {
+      console.log("ERROR:", err);
+    });
+}, []);
   const missingWebsite =
    filteredBusinesses.filter(
     b => !b.Website || b.Website === "N/A"
