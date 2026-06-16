@@ -41,50 +41,41 @@ The application validates missing or invalid values such as Phone and Website fi
 ### Clean & Readable Code
 Meaningful variable names, reusable logic, organized components, and clear code structure improve readability and make the application easier to maintain and extend.
 
-## Security Enhancements
+# Security Enhancements
 
-### Security Issues Identified
-- API endpoints were publicly accessible without authentication.
-- Sensitive credentials were stored directly in configuration files.
-- No request validation was implemented.
-- Missing security headers.
-- No rate limiting protection.
-- Error responses exposed internal server details.
+## Issues Identified
 
-### Security Improvements Implemented
+1. API endpoints were publicly accessible.
+2. Sensitive credentials could be exposed if hardcoded.
+3. User input was not validated.
+4. No rate limiting was configured.
+5. Missing security headers.
+6. Error responses could expose internal details.
 
-#### JWT Authentication & Authorization
-- Added JWT token generation endpoint.
-- Created authentication middleware to verify JWT tokens.
-- Protected business API routes from unauthorized access.
+## Changes Implemented
 
-#### Environment Variables
-- Moved MongoDB connection string to `.env`.
-- Added `JWT_SECRET` in `.env`.
-- Prevented hardcoded secrets in source code.
+### JWT Authentication
+- Added JWT-based authentication middleware.
+- Protected `/api/businesses` endpoint.
 
-#### Input Validation
+### Environment Variables
+- Moved secrets and database credentials to `.env`.
+- Added `.env` to `.gitignore`.
+
+### Input Validation
 - Added request validation using `express-validator`.
-- Validated query parameters before processing requests.
 
-#### Security Headers
-- Implemented `Helmet.js` to secure HTTP headers.
+### Security Headers
+- Implemented Helmet middleware.
 
-#### Rate Limiting
-- Added `express-rate-limit`.
-- Limited excessive API requests to prevent abuse.
+### Rate Limiting
+- Added `express-rate-limit` to prevent abuse.
 
-#### CORS Protection
-- Restricted API access to approved frontend origins only.
+### CORS Configuration
+- Configured CORS for controlled cross-origin access.
 
-#### Error Handling
-- Replaced detailed error messages with generic responses.
-- Prevented leakage of internal server information.
-
-### Testing
-- Generated JWT token using `/token`.
-- Verified protected routes return `Access Denied` without a valid token.
-- Confirmed authenticated requests work correctly with valid JWT tokens.
+### Error Handling
+- Replaced detailed server errors with generic responses.
 
 ## Author
 Rohit Vashisth
